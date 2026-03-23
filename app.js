@@ -128,19 +128,79 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
     //  Persistence
     // =====================================================================
-    function save() {
-        try {
-            localStorage.setItem(GALLERY_KEY, JSON.stringify(galleryEntries));
-            localStorage.setItem(INSPO_KEY, JSON.stringify(inspoEntries));
-        } catch (e) { console.warn('Storage full', e); }
+
+    // --- Cloud API helpers ---
+    async function apiRequest(path, options = {}) {
+        const url = CONFIG.API_BASE + path;
+        const headers = { 'X-API-Key': CONFIG.API_KEY, ...(options.headers || {}) };
+        const res = await fetch(url, { ...options, headers });
+        return res;
     }
-    function load() {
-        try {
-            const g = localStorage.getItem(GALLERY_KEY);
-            const i = localStorage.getItem(INSPO_KEY);
-            if (g) galleryEntries = JSON.parse(g);
-            if (i) inspoEntries = JSON.parse(i);
-        } catch (e) { galleryEntries = []; inspoEntries = []; }
+
+    async function uploadImageToR2(file) {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await apiRequest('/api/upload', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Upload failed');
+        // Return full URL to access the image
+        return CONFIG.API_BASE + data.url;
+    }
+
+    async function deleteImageFromR2(imageUrl) {
+        if (!imageUrl || !imageUrl.includes('/api/image/')) return;
+        const path = '/api/image/' + imageUrl.split('/api/image/')[1];
+        await apiRequest(path, { method: 'DELETE' });
+    }
+
+    async function saveCloud(type = 'gallery') {
+        const data = type === 'gallery' ? galleryEntries : inspoEntries;
+        await apiRequest('/api/data?type=' + type, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async function loadCloud(type = 'gallery') {
+        const res = await apiRequest('/api/data?type=' + type);
+        return await res.json();
+    }
+
+    // --- Unified save/load ---
+    async function save() {
+        if (CONFIG.USE_CLOUD) {
+            try {
+                await saveCloud('gallery');
+                await saveCloud('inspiration');
+            } catch (e) { console.error('Cloud save failed:', e); }
+        } else {
+            try {
+                localStorage.setItem(GALLERY_KEY, JSON.stringify(galleryEntries));
+                localStorage.setItem(INSPO_KEY, JSON.stringify(inspoEntries));
+            } catch (e) { console.warn('Storage full', e); }
+        }
+    }
+
+    async function load() {
+        if (CONFIG.USE_CLOUD) {
+            try {
+                galleryEntries = await loadCloud('gallery');
+                inspoEntries = await loadCloud('inspiration');
+                if (!Array.isArray(galleryEntries)) galleryEntries = [];
+                if (!Array.isArray(inspoEntries)) inspoEntries = [];
+            } catch (e) {
+                console.error('Cloud load failed:', e);
+                galleryEntries = []; inspoEntries = [];
+            }
+        } else {
+            try {
+                const g = localStorage.getItem(GALLERY_KEY);
+                const i = localStorage.getItem(INSPO_KEY);
+                if (g) galleryEntries = JSON.parse(g);
+                if (i) inspoEntries = JSON.parse(i);
+            } catch (e) { galleryEntries = []; inspoEntries = []; }
+        }
     }
 
     // =====================================================================
@@ -362,8 +422,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'delete':
                     if (confirm(t('confirm.delete', { name: contextTarget.name || contextTarget.id }))) {
+                        const imgUrl = contextTarget.image;
                         if (currentView === 'gallery') galleryEntries = galleryEntries.filter(e => e.id !== contextTarget.id);
                         else inspoEntries = inspoEntries.filter(e => e.id !== contextTarget.id);
+                        if (CONFIG.USE_CLOUD) deleteImageFromR2(imgUrl).catch(e => console.warn('R2 delete failed:', e));
                         save(); render(); showToast(t('toast.deleted'));
                     }
                     break;
@@ -476,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleUploadSubmit(); });
     });
 
-    function handleUploadSubmit() {
+    async function handleUploadSubmit() {
         if (!pendingFile) { showToast(t('toast.noImage')); return; }
 
         if (currentView === 'gallery') {
@@ -488,8 +550,21 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSubmitBtn.disabled = true;
         uploadSubmitBtn.textContent = t('upload.submitting');
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
+        try {
+            let imageUrl;
+
+            if (CONFIG.USE_CLOUD) {
+                // Upload image to R2
+                imageUrl = await uploadImageToR2(pendingFile);
+            } else {
+                // Local: convert to data URL
+                imageUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => resolve(ev.target.result);
+                    reader.readAsDataURL(pendingFile);
+                });
+            }
+
             const prompt = entryPromptArea.value.trim();
 
             if (currentView === 'gallery') {
@@ -499,23 +574,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tags = rawTags ? rawTags.split(',').map(s => s.trim()).filter(Boolean) : [];
 
                 galleryEntries.push({
-                    id: genId(), name, tag1, tags, image: ev.target.result,
+                    id: genId(), name, tag1, tags, image: imageUrl,
                     clicks: 0, createdAt: Date.now(), prompt
                 });
             } else {
                 inspoEntries.push({
-                    id: genId(), image: ev.target.result,
+                    id: genId(), image: imageUrl,
                     clicks: 0, createdAt: Date.now(), prompt
                 });
             }
 
-            save(); render(); closeUploadModal();
+            await save(); render(); closeUploadModal();
             const displayName = currentView === 'gallery' ? (entryNameInput.value.trim() || entryTag1Input.value.trim()) : 'Inspiration';
             showToast(t('toast.added', { name: displayName }));
+        } catch (err) {
+            console.error('Upload failed:', err);
+            showToast('Upload failed: ' + err.message);
+        } finally {
             uploadSubmitBtn.disabled = false;
             uploadSubmitBtn.textContent = t('upload.submit');
-        };
-        reader.readAsDataURL(pendingFile);
+        }
     }
 
     // =====================================================================
@@ -603,7 +681,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else updateGrid(5);
 
     applyI18nToDOM();
-    load();
-    render();
-    console.log(`✦ Style Explorer — locale: ${I18N.locale}`);
+    load().then(() => {
+        render();
+        console.log(`✦ Style Explorer — locale: ${I18N.locale}, cloud: ${CONFIG.USE_CLOUD}`);
+    }).catch(err => {
+        console.error('Failed to load data:', err);
+        render();
+    });
 });
