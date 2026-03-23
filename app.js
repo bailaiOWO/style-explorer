@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.id = entry.id;
 
         const tagsStr = (entry.tags && entry.tags.length > 0)
-            ? entry.tags.slice(0, 3).map(t => esc(t)).join(' · ')
+            ? entry.tags.slice(0, 3).map(tag => esc(tag)).join(' · ')
             : t('card.notags');
 
         card.innerHTML = `

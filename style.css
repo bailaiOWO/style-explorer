@@ -92,7 +92,7 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 /* ==========================================================================
    Gallery Grid (固定比例卡片)
    ========================================================================== */
-.gallery-grid{flex:1;overflow-y:auto;padding:20px;display:grid;grid-template-columns:repeat(var(--grid-columns,5),1fr);gap:14px;align-content:start}
+.gallery-grid{overflow-y:auto;padding:20px;display:grid;grid-template-columns:repeat(var(--grid-columns,5),1fr);gap:14px;align-content:start;flex:1 1 0;min-height:0}
 .card{background:var(--bg-secondary);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s;border:1px solid var(--border-color)}
 .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-hover)}
 .card__image-wrapper{position:relative;width:100%;aspect-ratio:10/16;overflow:hidden;background:var(--bg-tertiary)}
@@ -107,7 +107,7 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 /* ==========================================================================
    Inspiration Grid (瀑布流)
    ========================================================================== */
-.inspiration-grid{flex:1;overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:14px;align-content:start}
+.inspiration-grid{overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:14px;align-content:start;flex:1 1 0;min-height:0}
 .inspo-card{height:var(--inspo-height,1000px);flex-shrink:0;background:var(--bg-secondary);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s;border:1px solid var(--border-color)}
 .inspo-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-hover)}
 .inspo-card__image{height:100%;width:auto;display:block;transition:transform .3s}
