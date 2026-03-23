@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style Explorer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Upload Drop Zone -->
+    <div id="drop-overlay" class="drop-overlay">
+        <div class="drop-overlay-content">
+            <div class="drop-icon">+</div>
+            <p data-i18n="drop.text">Drop image to upload</p>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            <h2 class="modal-title" data-i18n="upload.title">New Entry</h2>
+            <div class="modal-body">
+                <div id="upload-preview-container" class="upload-preview-container">
+                    <img id="upload-preview-img" class="upload-preview-img" alt="Preview">
+                </div>
+                <div class="modal-form">
+                    <!-- Gallery mode fields -->
+                    <div id="form-gallery-fields">
+                        <label class="form-label" for="entry-tag1">
+                            <span data-i18n="upload.tag1.label">Artist Tag</span>
+                            <span id="auto-detect-badge" class="auto-badge" style="display:none;" data-i18n="upload.auto">auto-detected</span>
+                        </label>
+                        <input type="text" id="entry-tag1" class="form-input" placeholder="@artist_name" autocomplete="off">
+
+                        <label class="form-label" for="entry-name">
+                            <span data-i18n="upload.name.label">Name</span>
+                            <span class="form-hint" data-i18n="upload.name.hint">for your memory</span>
+                        </label>
+                        <input type="text" id="entry-name" class="form-input" placeholder="" autocomplete="off">
+
+                        <label class="form-label" for="entry-tags">
+                            <span data-i18n="upload.tags.label">Tags</span>
+                            <span class="form-hint" data-i18n="upload.tags.hint">comma separated</span>
+                        </label>
+                        <input type="text" id="entry-tags" class="form-input" placeholder="" autocomplete="off">
+                    </div>
+
+                    <!-- Prompt (both modes) -->
+                    <label class="form-label" for="entry-prompt">
+                        <span data-i18n="upload.prompt.label">Prompt</span>
+                        <span class="form-hint" data-i18n="upload.prompt.hint">extracted from PNG metadata</span>
+                    </label>
+                    <textarea id="entry-prompt" class="form-textarea" rows="4" data-i18n-placeholder="upload.prompt.placeholder" placeholder="No prompt metadata found"></textarea>
+
+                    <button id="upload-submit-btn" class="btn-primary" data-i18n="upload.submit">Add to Gallery</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="edit-modal-close-btn" class="modal-close-btn">&times;</button>
+            <h2 class="modal-title" data-i18n="edit.title">Edit Entry</h2>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div id="edit-gallery-fields">
+                        <label class="form-label" for="edit-tag1">
+                            <span data-i18n="upload.tag1.label">Artist Tag</span>
+                        </label>
+                        <input type="text" id="edit-tag1" class="form-input" autocomplete="off">
+
+                        <label class="form-label" for="edit-name">
+                            <span data-i18n="upload.name.label">Name</span>
+                        </label>
+                        <input type="text" id="edit-name" class="form-input" autocomplete="off">
+
+                        <label class="form-label" for="edit-tags">
+                            <span data-i18n="upload.tags.label">Tags</span>
+                        </label>
+                        <input type="text" id="edit-tags" class="form-input" autocomplete="off">
+                    </div>
+
+                    <label class="form-label" for="edit-prompt">
+                        <span data-i18n="upload.prompt.label">Prompt</span>
+                    </label>
+                    <textarea id="edit-prompt" class="form-textarea" rows="4"></textarea>
+
+                    <button id="edit-save-btn" class="btn-primary" data-i18n="edit.save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="lightbox" class="lightbox-overlay">
+        <button class="lightbox-close">&times;</button>
+        <img id="lightbox-img" class="lightbox-img" alt="Full view">
+        <div id="lightbox-info" class="lightbox-info">
+            <span id="lightbox-name" class="lightbox-name"></span>
+            <span id="lightbox-clicks" class="lightbox-clicks"></span>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <button class="context-menu-item" data-action="edit">
+            <span class="ctx-icon">✎</span> <span data-i18n="ctx.edit">Edit</span>
+        </button>
+        <button class="context-menu-item" data-action="copyTag">
+            <span class="ctx-icon">⎘</span> <span data-i18n="ctx.copyTag">Copy Tag</span>
+        </button>
+        <button class="context-menu-item" data-action="copyPrompt">
+            <span class="ctx-icon">⎘</span> <span data-i18n="ctx.copyPrompt">Copy Prompt</span>
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item context-menu-item--danger" data-action="delete">
+            <span class="ctx-icon">✕</span> <span data-i18n="ctx.delete">Delete</span>
+        </button>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo" data-i18n="app.title">✦ Style Explorer</h1>
+                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Collapse sidebar">◂</button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="gallery">
+                    <span class="nav-icon">⊞</span> <span class="nav-text" data-i18n="nav.gallery">Gallery</span>
+                </a>
+                <a href="#" class="nav-item" data-view="inspiration">
+                    <span class="nav-icon">✦</span> <span class="nav-text" data-i18n="nav.inspiration">Inspiration</span>
+                </a>
+                <a href="#" class="nav-item" data-view="upload">
+                    <span class="nav-icon">↑</span> <span class="nav-text" data-i18n="nav.upload">Upload</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="lang-toggle" class="lang-toggle-btn" data-i18n="lang.switch">中文</button>
+                <div class="sidebar-stats">
+                    <span id="total-count">0</span> <span class="nav-text" data-i18n-key="stats.entries">entries</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="topbar">
+                <div class="search-container">
+                    <span class="search-icon">⌕</span>
+                    <input type="search" id="search-input" class="search-input" data-i18n-placeholder="search.placeholder" placeholder="Search styles...">
+                </div>
+                <div class="topbar-actions">
+                    <div class="sort-group">
+                        <span class="sort-label" data-i18n="sort.label">Sort</span>
+                        <button class="sort-btn active" data-sort="clicks" data-i18n="sort.popular">Popular</button>
+                        <button class="sort-btn" data-sort="newest" data-i18n="sort.newest">Newest</button>
+                        <button class="sort-btn" data-sort="name" data-i18n="sort.name">Name</button>
+                        <button class="sort-btn" data-sort="random" data-i18n="sort.shuffle">Shuffle</button>
+                    </div>
+                    <div class="grid-control">
+                        <label for="grid-slider" class="grid-label" data-i18n="grid.label">Columns</label>
+                        <input type="range" id="grid-slider" min="3" max="8" value="5">
+                        <span id="grid-value" class="grid-value">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery View -->
+            <div id="gallery" class="gallery-grid"></div>
+
+            <!-- Inspiration View (masonry) -->
+            <div id="inspiration" class="inspiration-grid" style="display:none;"></div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state">
+                <div class="empty-icon">⊞</div>
+                <h3 data-i18n="empty.title">No styles yet</h3>
+                <p data-i18n="empty.desc">Drag and drop an image anywhere to get started</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="i18n.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
