@@ -108,7 +108,7 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
    Inspiration Grid (瀑布流)
    ========================================================================== */
 .inspiration-grid{flex:1;overflow-y:auto;padding:20px;display:flex;flex-wrap:wrap;gap:14px;align-content:start}
-.inspo-card{height:280px;flex-shrink:0;background:var(--bg-secondary);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s;border:1px solid var(--border-color)}
+.inspo-card{height:var(--inspo-height,1000px);flex-shrink:0;background:var(--bg-secondary);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s;border:1px solid var(--border-color)}
 .inspo-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-hover)}
 .inspo-card__image{height:100%;width:auto;display:block;transition:transform .3s}
 .inspo-card:hover .inspo-card__image{transform:scale(1.02)}

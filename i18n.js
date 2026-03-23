@@ -17,6 +17,7 @@ const I18N = {
             'sort.name': 'Name',
             'sort.shuffle': 'Shuffle',
             'grid.label': 'Columns',
+            'grid.height': 'Height',
 
             'empty.title': 'Nothing here yet',
             'empty.desc': 'Drag and drop an image anywhere to get started',
@@ -80,6 +81,7 @@ const I18N = {
             'sort.name': '名称',
             'sort.shuffle': '随机',
             'grid.label': '列数',
+            'grid.height': '高度',
 
             'empty.title': '还没有内容',
             'empty.desc': '拖拽图片到任意位置即可开始',

@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput     = document.getElementById('search-input');
     const gridSlider      = document.getElementById('grid-slider');
     const gridValue       = document.getElementById('grid-value');
+    const gridLabel       = document.querySelector('.grid-label');
     const totalCount      = document.getElementById('total-count');
     const toastEl         = document.getElementById('toast');
     const langToggle      = document.getElementById('lang-toggle');
@@ -628,6 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
             navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active');
             searchInput.value = ''; searchTerm = '';
+            syncSliderToView();
             render();
         });
     });
@@ -652,18 +654,52 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
     //  Grid
     // =====================================================================
+    let inspoHeight = parseInt(localStorage.getItem('inspoHeight') || '1000', 10);
+
     function updateGrid(val) {
         document.documentElement.style.setProperty('--grid-columns', val);
         gridValue.textContent = val;
     }
-    gridSlider.addEventListener('input', (e) => updateGrid(e.target.value));
-    gridSlider.addEventListener('change', () => localStorage.setItem('gridColumns', gridSlider.value));
+
+    function updateInspoHeight(val) {
+        inspoHeight = val;
+        document.documentElement.style.setProperty('--inspo-height', val + 'px');
+        gridValue.textContent = val + 'px';
+    }
+
+    /** 根据当前视图切换滑条模式 */
+    function syncSliderToView() {
+        if (currentView === 'inspiration') {
+            gridSlider.min = 200;
+            gridSlider.max = 1200;
+            gridSlider.step = 50;
+            gridSlider.value = inspoHeight;
+            gridLabel.textContent = t('grid.height') || 'Height';
+            updateInspoHeight(inspoHeight);
+        } else {
+            gridSlider.min = 3;
+            gridSlider.max = 8;
+            gridSlider.step = 1;
+            gridSlider.value = parseInt(localStorage.getItem('gridColumns') || '5', 10);
+            gridLabel.textContent = t('grid.label');
+            updateGrid(gridSlider.value);
+        }
+    }
+
+    gridSlider.addEventListener('input', (e) => {
+        if (currentView === 'inspiration') updateInspoHeight(e.target.value);
+        else updateGrid(e.target.value);
+    });
+    gridSlider.addEventListener('change', () => {
+        if (currentView === 'inspiration') localStorage.setItem('inspoHeight', gridSlider.value);
+        else localStorage.setItem('gridColumns', gridSlider.value);
+    });
 
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         const n = parseInt(e.key, 10);
-        if (n >= 3 && n <= 8) { gridSlider.value = n; updateGrid(n); }
+        if (currentView !== 'inspiration' && n >= 3 && n <= 8) { gridSlider.value = n; updateGrid(n); }
         if (e.key === 'Escape') { closeLightbox(); closeUploadModal(); closeEditModal(); closeContextMenu(); }
     });
 
@@ -676,9 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
     //  Init
     // =====================================================================
-    const savedCols = localStorage.getItem('gridColumns');
-    if (savedCols) { const v = parseInt(savedCols); if (v >= 3 && v <= 8) { gridSlider.value = v; updateGrid(v); } }
-    else updateGrid(5);
+    syncSliderToView();
 
     applyI18nToDOM();
     load().then(() => {
