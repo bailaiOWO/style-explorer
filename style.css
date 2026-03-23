@@ -96,7 +96,7 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 .card{background:var(--bg-secondary);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s;border:1px solid var(--border-color)}
 .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-hover)}
 .card__image-wrapper{position:relative;width:100%;aspect-ratio:10/16;overflow:hidden;background:var(--bg-tertiary)}
-.card__image{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.card__image{width:100%;height:100%;object-fit:contain;display:block;transition:transform .3s}
 .card:hover .card__image{transform:scale(1.03)}
 .card__badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--radius-sm);pointer-events:none;user-select:none}
 .card__info{padding:7px 9px}
