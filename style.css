@@ -117,8 +117,6 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 /* ---- R18 / NSFW ---- */
 .inspo-card.nsfw .inspo-card__image{filter:blur(20px);transition:filter .3s,transform .3s}
 .inspo-card.nsfw.nsfw-visible .inspo-card__image{filter:none}
-.inspo-card.nsfw::after{content:'R18';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--red);font-size:18px;font-weight:700;letter-spacing:2px;pointer-events:none;opacity:.8;text-shadow:0 2px 8px rgba(0,0,0,.6)}
-.inspo-card.nsfw.nsfw-visible::after{display:none}
 
 .nsfw-toggle{display:flex;align-items:center;gap:6px}
 .nsfw-label{font-size:11px;color:var(--red);font-weight:600;user-select:none}

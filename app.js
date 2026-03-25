@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nsfwItem = contextMenu.querySelector('[data-action="toggleNsfw"]');
         if (nsfwItem) {
             nsfwItem.style.display = currentView === 'inspiration' ? '' : 'none';
-            const nsfwTextEl = nsfwItem.querySelector('[data-i18n]');
+            const nsfwTextEl = document.getElementById('nsfw-menu-text');
             if (nsfwTextEl) nsfwTextEl.textContent = entry.nsfw ? t('ctx.unNsfw') : t('ctx.toggleNsfw');
         }
 
