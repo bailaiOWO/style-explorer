@@ -626,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * 灵感界面快��上传：跳过弹窗，直接上传到 R2 并添加条目
+     * 灵感界面快速上传：跳过弹窗，直接上传到 R2 并添加条目
      */
     async function quickUploadInspo(file) {
         try {
