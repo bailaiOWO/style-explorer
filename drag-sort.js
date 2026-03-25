@@ -52,6 +52,10 @@
         e.preventDefault();
         isDragging = true;
 
+        // 禁止浏览器原生图片拖拽
+        const preventNativeDrag = (ev) => ev.preventDefault();
+        document.addEventListener('dragstart', preventNativeDrag, true);
+
         const rect = card.getBoundingClientRect();
         const cards = Array.from(container.querySelectorAll(cardSelector));
         const fromIndex = cards.indexOf(card);
@@ -160,6 +164,7 @@
 
             setTimeout(() => {
                 ghostWrapper.remove();
+                document.removeEventListener('dragstart', preventNativeDrag, true);
                 card.style.visibility = '';
                 card.style.transition = '';
 
