@@ -722,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
+    }
 
     // =====================================================================
     //  Search
