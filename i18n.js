@@ -116,7 +116,7 @@ const I18N = {
             'ctx.copyPrompt': '复制提示词',
             'ctx.delete': '删除',
 
-            'ctx.toggleNsfw': '标记��� R18',
+            'ctx.toggleNsfw': '标记为 R18',
             'ctx.unNsfw': '取消 R18',
             'nsfw.show': 'R18',
 

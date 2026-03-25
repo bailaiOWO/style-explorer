@@ -518,6 +518,13 @@ document.addEventListener('DOMContentLoaded', () => {
     //  Upload Modal
     // =====================================================================
     async function handleNewImage(file) {
+        // 灵感界面：直接上传，不弹窗
+        if (currentView === 'inspiration') {
+            await quickUploadInspo(file);
+            pendingFile = null;
+            return;
+        }
+
         const badge = document.getElementById('auto-detect-badge');
         const reader = new FileReader();
         reader.onload = (ev) => { uploadPreview.src = ev.target.result; };
@@ -615,6 +622,40 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             uploadSubmitBtn.disabled = false;
             uploadSubmitBtn.textContent = t('upload.submit');
+        }
+    }
+
+    /**
+     * 灵感界面快��上传：跳过弹窗，直接上传到 R2 并添加条目
+     */
+    async function quickUploadInspo(file) {
+        try {
+            showToast('Uploading...');
+            const meta = await processImageFile(file);
+
+            let imageUrl;
+            if (CONFIG.USE_CLOUD) {
+                imageUrl = await uploadImageToR2(file);
+            } else {
+                imageUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => resolve(ev.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            inspoEntries.push({
+                id: genId(), image: imageUrl,
+                clicks: 0, createdAt: Date.now(),
+                prompt: meta.prompt || ''
+            });
+
+            await save();
+            render();
+            showToast(t('toast.added', { name: 'Inspiration' }));
+        } catch (err) {
+            console.error('Quick upload failed:', err);
+            showToast('Upload failed: ' + err.message);
         }
     }
 
@@ -816,6 +857,23 @@ document.addEventListener('DOMContentLoaded', () => {
     applyI18nToDOM();
     load().then(() => {
         render();
+
+        // 初始化拖拽排序
+        if (window.DragSort) {
+            // 画廊拖拽排序
+            DragSort.init('.gallery-grid', '.card', (from, to) => {
+                const item = galleryEntries.splice(from, 1)[0];
+                galleryEntries.splice(to, 0, item);
+                save();
+            });
+            // 灵感拖拽排序
+            DragSort.init('.inspiration-grid', '.inspo-card', (from, to) => {
+                const item = inspoEntries.splice(from, 1)[0];
+                inspoEntries.splice(to, 0, item);
+                save();
+            });
+        }
+
         console.log(`✦ Style Explorer — locale: ${I18N.locale}, cloud: ${CONFIG.USE_CLOUD}`);
     }).catch(err => {
         console.error('Failed to load data:', err);
