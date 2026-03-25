@@ -116,6 +116,9 @@
             <span class="ctx-icon">⎘</span> <span data-i18n="ctx.copyPrompt">Copy Prompt</span>
         </button>
         <div class="context-menu-divider"></div>
+        <button class="context-menu-item" data-action="toggleNsfw">
+            <span class="ctx-icon">⚠</span> <span data-i18n="ctx.toggleNsfw">Toggle R18</span>
+        </button>
         <button class="context-menu-item context-menu-item--danger" data-action="delete">
             <span class="ctx-icon">✕</span> <span data-i18n="ctx.delete">Delete</span>
         </button>
@@ -168,6 +171,13 @@
                         <label for="grid-slider" class="grid-label" data-i18n="grid.label">Columns</label>
                         <input type="range" id="grid-slider" min="3" max="8" value="5">
                         <span id="grid-value" class="grid-value">5</span>
+                    </div>
+                    <div id="nsfw-toggle-wrap" class="nsfw-toggle" style="display:none;">
+                        <label class="nsfw-switch">
+                            <input type="checkbox" id="nsfw-toggle">
+                            <span class="nsfw-slider"></span>
+                        </label>
+                        <span class="nsfw-label" data-i18n="nsfw.show">R18</span>
                     </div>
                 </div>
             </div>

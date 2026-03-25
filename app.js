@@ -65,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pendingFile = null;
     let contextTarget = null; // entry being right-clicked
+    let showNsfw = false;     // R18 显示开关
+    const nsfwToggleWrap = document.getElementById('nsfw-toggle-wrap');
+    const nsfwToggle     = document.getElementById('nsfw-toggle');
 
     // =====================================================================
     //  PNG Metadata
@@ -258,6 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Toggle views
         gallery.style.display = currentView === 'gallery' ? '' : 'none';
         inspiration.style.display = currentView === 'inspiration' ? '' : 'none';
+        // R18 开关只在灵感界面显示
+        if (nsfwToggleWrap) nsfwToggleWrap.style.display = currentView === 'inspiration' ? '' : 'none';
 
         if (entries.length === 0) {
             gallery.style.display = 'none';
@@ -329,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Inspiration Card ----
     function createInspoCard(entry) {
         const card = document.createElement('div');
-        card.className = 'inspo-card';
+        card.className = 'inspo-card' + (entry.nsfw ? ' nsfw' : '') + (entry.nsfw && showNsfw ? ' nsfw-visible' : '');
         card.dataset.id = entry.id;
 
         card.innerHTML = `<img class="inspo-card__image" src="${entry.image}" alt="inspiration" loading="lazy">`;
@@ -380,6 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const copyTagItem = contextMenu.querySelector('[data-action="copyTag"]');
         if (copyTagItem) copyTagItem.style.display = currentView === 'gallery' ? '' : 'none';
 
+        // Show/hide R18 toggle — only in inspiration view
+        const nsfwItem = contextMenu.querySelector('[data-action="toggleNsfw"]');
+        if (nsfwItem) {
+            nsfwItem.style.display = currentView === 'inspiration' ? '' : 'none';
+            const nsfwTextEl = nsfwItem.querySelector('[data-i18n]');
+            if (nsfwTextEl) nsfwTextEl.textContent = entry.nsfw ? t('ctx.unNsfw') : t('ctx.toggleNsfw');
+        }
+
         contextMenu.style.left = e.clientX + 'px';
         contextMenu.style.top = e.clientY + 'px';
         contextMenu.classList.add('visible');
@@ -428,6 +441,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         else inspoEntries = inspoEntries.filter(e => e.id !== contextTarget.id);
                         if (CONFIG.USE_CLOUD) deleteImageFromR2(imgUrl).catch(e => console.warn('R2 delete failed:', e));
                         save(); render(); showToast(t('toast.deleted'));
+                    }
+                    break;
+                case 'toggleNsfw':
+                    if (currentView === 'inspiration') {
+                        contextTarget.nsfw = !contextTarget.nsfw;
+                        save();
+                        render();
+                        showToast(contextTarget.nsfw ? t('ctx.toggleNsfw') : t('ctx.unNsfw'));
                     }
                     break;
             }
@@ -767,6 +788,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentView !== 'inspiration' && n >= 3 && n <= 8) { gridSlider.value = n; updateGrid(n); }
         if (e.key === 'Escape') { closeLightbox(); closeUploadModal(); closeEditModal(); closeContextMenu(); }
     });
+
+    // =====================================================================
+    //  NSFW Toggle
+    // =====================================================================
+    if (nsfwToggle) {
+        nsfwToggle.addEventListener('change', () => {
+            showNsfw = nsfwToggle.checked;
+            // 切换所有 nsfw 卡片的可见状态
+            inspiration.querySelectorAll('.inspo-card.nsfw').forEach(card => {
+                card.classList.toggle('nsfw-visible', showNsfw);
+            });
+        });
+    }
 
     // =====================================================================
     //  Language

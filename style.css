@@ -114,6 +114,21 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 .inspo-card__image{height:100%;width:auto;display:block;transition:transform .3s}
 .inspo-card:hover .inspo-card__image{transform:scale(1.02)}
 
+/* ---- R18 / NSFW ---- */
+.inspo-card.nsfw .inspo-card__image{filter:blur(20px);transition:filter .3s,transform .3s}
+.inspo-card.nsfw.nsfw-visible .inspo-card__image{filter:none}
+.inspo-card.nsfw::after{content:'R18';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--red);font-size:18px;font-weight:700;letter-spacing:2px;pointer-events:none;opacity:.8;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.inspo-card.nsfw.nsfw-visible::after{display:none}
+
+.nsfw-toggle{display:flex;align-items:center;gap:6px}
+.nsfw-label{font-size:11px;color:var(--red);font-weight:600;user-select:none}
+.nsfw-switch{position:relative;width:32px;height:18px;display:inline-block}
+.nsfw-switch input{opacity:0;width:0;height:0}
+.nsfw-slider{position:absolute;inset:0;background:var(--bg-tertiary);border-radius:9px;cursor:pointer;transition:background .2s}
+.nsfw-slider::before{content:'';position:absolute;width:14px;height:14px;left:2px;bottom:2px;background:var(--text-secondary);border-radius:50%;transition:transform .2s,background .2s}
+.nsfw-switch input:checked+.nsfw-slider{background:var(--red)}
+.nsfw-switch input:checked+.nsfw-slider::before{transform:translateX(14px);background:#fff}
+
 /* ==========================================================================
    Context Menu (右键菜单)
    ========================================================================== */

@@ -48,6 +48,10 @@ const I18N = {
             'ctx.copyPrompt': 'Copy Prompt',
             'ctx.delete': 'Delete',
 
+            'ctx.toggleNsfw': 'Mark as R18',
+            'ctx.unNsfw': 'Unmark R18',
+            'nsfw.show': 'R18',
+
             'lightbox.clicks': '{n} clicks',
             'lightbox.click': '{n} click',
 
@@ -111,6 +115,10 @@ const I18N = {
             'ctx.copyTag': '复制画师串',
             'ctx.copyPrompt': '复制提示词',
             'ctx.delete': '删除',
+
+            'ctx.toggleNsfw': '标记��� R18',
+            'ctx.unNsfw': '取消 R18',
+            'nsfw.show': 'R18',
 
             'lightbox.clicks': '{n} 次点击',
             'lightbox.click': '{n} 次点击',
