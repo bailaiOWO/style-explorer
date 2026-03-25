@@ -677,38 +677,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const cards = inspiration.querySelectorAll('.inspo-card');
         if (cards.length === 0) { changeFn(); return; }
 
-        // First: 记录当前位置
+        // First: 记录当前位置和尺寸
         const firstRects = new Map();
         cards.forEach(card => {
             firstRects.set(card, card.getBoundingClientRect());
         });
 
-        // 执行变化
+        // 禁用 transition，执行变化
+        cards.forEach(card => { card.style.transition = 'none'; });
         changeFn();
 
-        // Last: 获取新位置，Invert+Play
+        // 强制 reflow，让浏览器计算新布局
+        void inspiration.offsetHeight;
+
+        // Last: 获取新位置
         cards.forEach(card => {
             const first = firstRects.get(card);
             const last = card.getBoundingClientRect();
             const dx = first.left - last.left;
             const dy = first.top - last.top;
-            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+            const sw = first.width !== 0 ? first.width / last.width : 1;
+            const sh = first.height !== 0 ? first.height / last.height : 1;
+            const needsAnim = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5 || Math.abs(sw - 1) > 0.01 || Math.abs(sh - 1) > 0.01;
+            if (!needsAnim) { card.style.transition = ''; return; }
 
-            card.style.transition = 'none';
-            card.style.transform = `translate(${dx}px, ${dy}px)`;
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    card.style.transition = 'transform .3s ease, height .3s ease, box-shadow .15s';
-                    card.style.transform = '';
-                });
-            });
+            // Invert: 把卡片视觉上放回旧位置
+            card.style.transformOrigin = 'top left';
+            card.style.transform = `translate(${dx}px, ${dy}px) scale(${sw}, ${sh})`;
         });
-    }
 
-    function updateInspoHeightDirect(val) {
-        inspoHeight = val;
-        document.documentElement.style.setProperty('--inspo-height', val + 'px');
-        gridValue.textContent = val;
+        // Play: 下一帧开启 transition 动画到新位置
+        requestAnimationFrame(() => {
+            cards.forEach(card => {
+                if (!card.style.transform) return;
+                card.style.transition = 'transform .3s cubic-bezier(0.2, 0, 0, 1)';
+                card.style.transform = '';
+            });
+            setTimeout(() => {
+                cards.forEach(card => {
+                    card.style.transition = '';
+                    card.style.transform = '';
+                    card.style.transformOrigin = '';
+                });
+            }, 320);
+        });
     }
 
     /** 根据当前视图切换滑条模式 */
