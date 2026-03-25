@@ -126,30 +126,6 @@
 
     <!-- Main App -->
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h1 class="logo" data-i18n="app.title">✦ Style Explorer</h1>
-                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Collapse sidebar">◂</button>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-view="gallery">
-                    <span class="nav-icon">⊞</span> <span class="nav-text" data-i18n="nav.gallery">Gallery</span>
-                </a>
-                <a href="#" class="nav-item" data-view="inspiration">
-                    <span class="nav-icon">✦</span> <span class="nav-text" data-i18n="nav.inspiration">Inspiration</span>
-                </a>
-                <a href="#" class="nav-item" data-view="upload">
-                    <span class="nav-icon">↑</span> <span class="nav-text" data-i18n="nav.upload">Upload</span>
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <button id="lang-toggle" class="lang-toggle-btn" data-i18n="lang.switch">中文</button>
-                <div class="sidebar-stats">
-                    <span id="total-count">0</span> <span class="nav-text" data-i18n-key="stats.entries">entries</span>
-                </div>
-            </div>
-        </aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -158,6 +134,10 @@
                 <div class="search-container">
                     <span class="search-icon">⌕</span>
                     <input type="search" id="search-input" class="search-input" data-i18n-placeholder="search.placeholder" placeholder="Search styles...">
+                </div>
+                <div class="topbar-info">
+                    <span id="total-count" class="topbar-count">0</span>
+                    <button id="lang-toggle" class="lang-toggle-btn-mini" data-i18n="lang.switch">中文</button>
                 </div>
                 <div class="topbar-actions">
                     <div class="sort-group">
@@ -198,6 +178,16 @@
             </div>
         </main>
     </div>
+
+    <!-- Floating Switcher Ball -->
+    <div id="switcher-ball" class="switcher-ball">
+        <div class="switcher-ball-inner">
+            <span id="switcher-icon" class="switcher-icon">⊞</span>
+        </div>
+        <div id="switcher-hint-left" class="switcher-hint switcher-hint--left" data-i18n="nav.gallery">Gallery</div>
+        <div id="switcher-hint-right" class="switcher-hint switcher-hint--right" data-i18n="nav.inspiration">Inspiration</div>
+    </div>
+    <div id="switcher-track" class="switcher-track"></div>
 
     <!-- Toast -->
     <div id="toast" class="toast"></div>

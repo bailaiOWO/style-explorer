@@ -24,8 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
     //  DOM
     // =====================================================================
-    const sidebar         = document.getElementById('sidebar');
-    const collapseBtn     = document.getElementById('sidebar-collapse-btn');
     const gallery         = document.getElementById('gallery');
     const inspiration     = document.getElementById('inspiration');
     const emptyState      = document.getElementById('empty-state');
@@ -61,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editSaveBtn     = document.getElementById('edit-save-btn');
     const editGalleryFields = document.getElementById('edit-gallery-fields');
     const sortBtns        = document.querySelectorAll('.sort-btn');
-    const navItems        = document.querySelectorAll('.nav-item');
 
     let pendingFile = null;
     let contextTarget = null; // entry being right-clicked
@@ -661,41 +658,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =====================================================================
-    //  Sidebar Collapse
+    //  Floating Switcher Ball
     // =====================================================================
-    function toggleSidebar() {
-        const collapsed = sidebar.classList.toggle('collapsed');
-        localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+    const switcherBall  = document.getElementById('switcher-ball');
+    const switcherIcon  = document.getElementById('switcher-icon');
+    const switcherTrack = document.getElementById('switcher-track');
+    const SWITCH_THRESHOLD = 50; // px drag distance to trigger switch
+
+    function switchView(view) {
+        if (currentView === view) return;
+        currentView = view;
+        searchInput.value = ''; searchTerm = '';
+        switcherIcon.textContent = view === 'gallery' ? '⊞' : '✦';
+        syncSliderToView();
+        render();
+        showToast(view === 'gallery' ? t('nav.gallery') : t('nav.inspiration'));
     }
-    collapseBtn.addEventListener('click', toggleSidebar);
-    if (localStorage.getItem('sidebarCollapsed') === '1') sidebar.classList.add('collapsed');
 
-    // =====================================================================
-    //  Sidebar Nav
-    // =====================================================================
-    navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
+    if (switcherBall) {
+        let ballStartX = 0;
+        let ballDragX = 0;
+        let ballDragging = false;
+
+        switcherBall.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
             e.preventDefault();
-            const view = item.dataset.view;
+            ballStartX = e.clientX;
+            ballDragX = 0;
+            ballDragging = true;
+            switcherBall.classList.add('dragging');
+            switcherTrack.classList.add('visible');
 
-            if (view === 'upload') {
-                const inp = document.createElement('input');
-                inp.type = 'file'; inp.accept = 'image/*';
-                inp.addEventListener('change', () => {
-                    if (inp.files.length > 0) { pendingFile = inp.files[0]; handleNewImage(pendingFile); }
-                });
-                inp.click();
-                return;
+            function onMove(ev) {
+                ballDragX = ev.clientX - ballStartX;
+                // Move ball visually
+                switcherBall.style.transform = `translateX(calc(-50% + ${ballDragX}px))`;
+                // Direction classes
+                switcherBall.classList.toggle('drag-left', ballDragX < -SWITCH_THRESHOLD);
+                switcherBall.classList.toggle('drag-right', ballDragX > SWITCH_THRESHOLD);
             }
 
-            currentView = view;
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
-            searchInput.value = ''; searchTerm = '';
-            syncSliderToView();
-            render();
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                ballDragging = false;
+
+                // Snap back
+                switcherBall.style.transition = 'transform .3s cubic-bezier(0.2, 0, 0, 1)';
+                switcherBall.style.transform = 'translateX(-50%)';
+                setTimeout(() => { switcherBall.style.transition = ''; }, 310);
+
+                switcherBall.classList.remove('dragging', 'drag-left', 'drag-right');
+                switcherTrack.classList.remove('visible');
+
+                // Trigger switch
+                if (ballDragX < -SWITCH_THRESHOLD) {
+                    switchView('gallery');
+                } else if (ballDragX > SWITCH_THRESHOLD) {
+                    switchView('inspiration');
+                }
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
         });
-    });
 
     // =====================================================================
     //  Search
