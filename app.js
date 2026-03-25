@@ -663,6 +663,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateInspoHeight(val) {
         inspoHeight = val;
+        // FLIP animation for smooth card repositioning
+        flipAnimateInspo(() => {
+            document.documentElement.style.setProperty('--inspo-height', val + 'px');
+        });
+        gridValue.textContent = val;
+    }
+
+    /**
+     * FLIP 动画：记录卡片位置 → 执行变化 → 动画移动到新位置
+     */
+    function flipAnimateInspo(changeFn) {
+        const cards = inspiration.querySelectorAll('.inspo-card');
+        if (cards.length === 0) { changeFn(); return; }
+
+        // First: 记录当前位置
+        const firstRects = new Map();
+        cards.forEach(card => {
+            firstRects.set(card, card.getBoundingClientRect());
+        });
+
+        // 执行变化
+        changeFn();
+
+        // Last: 获取新位置，Invert+Play
+        cards.forEach(card => {
+            const first = firstRects.get(card);
+            const last = card.getBoundingClientRect();
+            const dx = first.left - last.left;
+            const dy = first.top - last.top;
+            if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+            card.style.transition = 'none';
+            card.style.transform = `translate(${dx}px, ${dy}px)`;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    card.style.transition = 'transform .3s ease, height .3s ease, box-shadow .15s';
+                    card.style.transform = '';
+                });
+            });
+        });
+    }
+
+    function updateInspoHeightDirect(val) {
+        inspoHeight = val;
         document.documentElement.style.setProperty('--inspo-height', val + 'px');
         gridValue.textContent = val;
     }
@@ -686,9 +730,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let sliderRAF = null;
     gridSlider.addEventListener('input', (e) => {
-        if (currentView === 'inspiration') updateInspoHeight(e.target.value);
-        else updateGrid(e.target.value);
+        if (currentView === 'inspiration') {
+            // Throttle with rAF to avoid animation stacking
+            if (sliderRAF) cancelAnimationFrame(sliderRAF);
+            sliderRAF = requestAnimationFrame(() => {
+                updateInspoHeight(e.target.value);
+                sliderRAF = null;
+            });
+        } else {
+            updateGrid(e.target.value);
+        }
     });
     gridSlider.addEventListener('change', () => {
         if (currentView === 'inspiration') localStorage.setItem('inspoHeight', gridSlider.value);
