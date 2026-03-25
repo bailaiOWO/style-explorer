@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateInspoHeight(val) {
         inspoHeight = val;
         document.documentElement.style.setProperty('--inspo-height', val + 'px');
-        gridValue.textContent = val + 'px';
+        gridValue.textContent = val;
     }
 
     /** 根据当前视图切换滑条模式 */
