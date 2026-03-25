@@ -503,11 +503,12 @@ document.addEventListener('DOMContentLoaded', () => {
     //  Drag & Drop
     // =====================================================================
     let dragCounter = 0;
-    document.addEventListener('dragenter', (e) => { e.preventDefault(); if (++dragCounter === 1) dropOverlay.classList.add('visible'); });
+    document.addEventListener('dragenter', (e) => { e.preventDefault(); if (window.DragSort && DragSort.isDragging) return; if (++dragCounter === 1) dropOverlay.classList.add('visible'); });
     document.addEventListener('dragleave', (e) => { e.preventDefault(); if (--dragCounter === 0) dropOverlay.classList.remove('visible'); });
     document.addEventListener('dragover', (e) => e.preventDefault());
     document.addEventListener('drop', (e) => {
         e.preventDefault(); dragCounter = 0; dropOverlay.classList.remove('visible');
+        if (window.DragSort && DragSort.isDragging) return;
         const file = e.dataTransfer.files[0];
         if (!file || !file.type.startsWith('image/')) { showToast(t('toast.dropImage')); return; }
         pendingFile = file;

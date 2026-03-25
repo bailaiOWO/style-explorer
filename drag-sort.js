@@ -1,20 +1,18 @@
 /**
  * Drag Sort — 拖拽排序模块
- * 3D 透视倾斜 + 阻尼跟随 + FLIP ��动避让动画
+ * 3D 透视倾斜 + 阻尼跟随 + FLIP 自动避让动画
  */
 (function() {
     let dragState = null;
+    let isDragging = false;  // 暴露给外部，用于禁止 drop overlay
 
-    // 阻尼参数：越小跟随越慢，手感越「重」
     const DAMPING = 0.08;
-    // 3D 倾斜参数
-    const MAX_ROTATE_Y = 15;     // 水平拖动最大 Y 轴旋转角度
-    const MAX_ROTATE_X = 8;      // 垂直拖动最大 X 轴旋转角度
-    const PERSPECTIVE = '800px'; // 透视距离
-    // ���让动画时长
+    const MAX_ROTATE_Y = 15;
+    const MAX_ROTATE_X = 8;
+    const PERSPECTIVE = '800px';
     const ANIM_DURATION = 300;
-    // 需要拖动多远才开始算「拖拽」（防止误触点击）
     const DRAG_THRESHOLD = 5;
+    const REORDER_COOLDOWN = 200; // 避让动画冷却时间 ms
 
     function initDragSort(containerSelector, cardSelector, onReorder) {
         const containers = document.querySelectorAll(containerSelector);
@@ -23,7 +21,6 @@
                 const card = e.target.closest(cardSelector);
                 if (!card || e.button !== 0) return;
                 if (e.target.closest('.context-menu')) return;
-                // 记���起始点，到达阈值才开始拖拽
                 prepareDrag(e, card, container, cardSelector, onReorder);
             });
         });
@@ -53,12 +50,13 @@
 
     function startDrag(e, card, container, cardSelector, onReorder) {
         e.preventDefault();
+        isDragging = true;
 
         const rect = card.getBoundingClientRect();
         const cards = Array.from(container.querySelectorAll(cardSelector));
         const fromIndex = cards.indexOf(card);
 
-        // 创建拖拽幽灵
+        // 创��幽灵
         const ghost = card.cloneNode(true);
         ghost.style.cssText = `
             position: fixed;
@@ -68,14 +66,15 @@
             height: ${rect.height}px;
             left: ${rect.left}px;
             top: ${rect.top}px;
-            opacity: 0.92;
+            opacity: 1;
             transition: none;
             transform-style: preserve-3d;
             will-change: transform, left, top;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
             border-radius: 8px;
+            overflow: hidden;
         `;
-        // 给 ghost 的父级加透���
+
         const ghostWrapper = document.createElement('div');
         ghostWrapper.style.cssText = `
             position: fixed;
@@ -87,45 +86,37 @@
         ghostWrapper.appendChild(ghost);
         document.body.appendChild(ghostWrapper);
 
-        // 隐藏原卡片
-        card.style.opacity = '0';
+        // 原卡片占位但不可见
+        card.style.visibility = 'hidden';
         card.style.transition = 'none';
 
-        // 幽灵当前位置（阻尼用）
         let ghostX = rect.left;
         let ghostY = rect.top;
-        // 鼠标目标位置
         let targetX = rect.left;
         let targetY = rect.top;
-        // 速度（用于倾���计算）
-        let velocityX = 0;
-        let velocityY = 0;
         let prevGhostX = ghostX;
         let prevGhostY = ghostY;
-
         let animFrame = null;
         let currentToIndex = fromIndex;
+        let lastReorderTime = 0;  // 冷却计时器
 
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
 
         dragState = { ghost, ghostWrapper, card, container, cards, cardSelector, fromIndex, onReorder };
 
-        // 阻尼动画循环
+        // 阻尼动画
         function animate() {
-            // 阻尼插值
             ghostX += (targetX - ghostX) * DAMPING;
             ghostY += (targetY - ghostY) * DAMPING;
 
-            // 计算速度（用于 3D 倾斜）
-            velocityX = ghostX - prevGhostX;
-            velocityY = ghostY - prevGhostY;
+            const vx = ghostX - prevGhostX;
+            const vy = ghostY - prevGhostY;
             prevGhostX = ghostX;
             prevGhostY = ghostY;
 
-            // 3D 倾斜：��平速度 → rotateY，垂直速度 → rotateX
-            const rotateY = clamp(velocityX * 1.2, -MAX_ROTATE_Y, MAX_ROTATE_Y);
-            const rotateX = clamp(-velocityY * 0.8, -MAX_ROTATE_X, MAX_ROTATE_X);
+            const rotateY = clamp(vx * 1.5, -MAX_ROTATE_Y, MAX_ROTATE_Y);
+            const rotateX = clamp(-vy * 1.0, -MAX_ROTATE_X, MAX_ROTATE_X);
 
             ghost.style.left = ghostX + 'px';
             ghost.style.top = ghostY + 'px';
@@ -136,16 +127,21 @@
         animFrame = requestAnimationFrame(animate);
 
         function onMouseMove(ev) {
+            ev.preventDefault(); // 防止浏览器默认拖拽���为
             targetX = ev.clientX - offsetX;
             targetY = ev.clientY - offsetY;
 
-            // 用幽灵的中心点���测悬停
+            // 节流：冷却期内不��排
+            const now = Date.now();
+            if (now - lastReorderTime < REORDER_COOLDOWN) return;
+
             const centerX = ghostX + rect.width / 2;
             const centerY = ghostY + rect.height / 2;
 
             const toIndex = findDropIndex(dragState.cards, card, centerX, centerY);
             if (toIndex !== -1 && toIndex !== currentToIndex) {
                 currentToIndex = toIndex;
+                lastReorderTime = now;
                 reorderWithFlip(container, dragState.cards, card, fromIndex, toIndex, cardSelector);
             }
         }
@@ -155,7 +151,6 @@
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
 
-            // 飞���最终位置
             const finalRect = card.getBoundingClientRect();
             ghost.style.transition = 'all .3s cubic-bezier(0.2, 0, 0, 1)';
             ghost.style.left = finalRect.left + 'px';
@@ -165,13 +160,14 @@
 
             setTimeout(() => {
                 ghostWrapper.remove();
-                card.style.opacity = '';
+                card.style.visibility = '';
                 card.style.transition = '';
 
                 if (currentToIndex !== fromIndex && onReorder) {
                     onReorder(fromIndex, currentToIndex);
                 }
                 dragState = null;
+                isDragging = false;
             }, 310);
         }
 
@@ -191,24 +187,21 @@
     }
 
     function reorderWithFlip(container, cards, draggedCard, fromIndex, toIndex, cardSelector) {
-        // 记录当前位置
         const firstRects = new Map();
         cards.forEach(c => {
             if (c !== draggedCard) firstRects.set(c, c.getBoundingClientRect());
         });
 
-        // 移动 DOM
         container.removeChild(draggedCard);
         const remaining = Array.from(container.querySelectorAll(cardSelector));
-        const insertAt = toIndex > remaining.length ? remaining.length : toIndex;
+        const insertAt = Math.min(toIndex, remaining.length);
         if (insertAt >= remaining.length) {
             container.appendChild(draggedCard);
         } else {
             container.insertBefore(draggedCard, remaining[insertAt]);
         }
-        draggedCard.style.opacity = '0';
+        draggedCard.style.visibility = 'hidden';
 
-        // FLIP 动画
         const updated = Array.from(container.querySelectorAll(cardSelector));
         updated.forEach(c => {
             if (c === draggedCard) return;
@@ -238,5 +231,8 @@
         return Math.max(min, Math.min(max, val));
     }
 
-    window.DragSort = { init: initDragSort };
+    window.DragSort = {
+        init: initDragSort,
+        get isDragging() { return isDragging; }
+    };
 })();
