@@ -659,7 +659,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const switcherIcon  = document.getElementById('switcher-icon');
     const switcherTrack = document.getElementById('switcher-track');
     const viewSlider    = document.getElementById('view-slider');
-    const SWITCH_THRESHOLD = 50; // px drag distance to trigger switch
+    const SWITCH_THRESHOLD = 40;
+
+    function rubberBand(x, limit) {
+        if (x === 0) return 0;
+        const sign = x > 0 ? 1 : -1;
+        return sign * limit * (1 - Math.exp(-Math.abs(x) / limit));
+    }
 
     function switchView(view) {
         if (currentView === view) return;
@@ -673,52 +679,47 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     }
 
-    if (switcherBall) {
-        let ballStartX = 0;
-        let ballDragX = 0;
-        let ballDragging = false;
+    function startBallDrag(startX, startY) {
+        let dragX = 0, dragY = 0;
+        switcherBall.classList.add('dragging');
+        switcherBall.style.transition = 'none';
+        function onMove(cx, cy) {
+            dragX = rubberBand(cx - startX, 150);
+            dragY = rubberBand(cy - startY, 200);
+            switcherBall.style.transform = `translate(calc(-50% + ${dragX}px), ${dragY}px)`;
+            switcherBall.classList.toggle('drag-left', dragX < -SWITCH_THRESHOLD);
+            switcherBall.classList.toggle('drag-right', dragX > SWITCH_THRESHOLD);
+        }
+        function onEnd() {
+            switcherBall.classList.remove('dragging', 'drag-left', 'drag-right');
+            switcherBall.style.transition = 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            switcherBall.style.transform = 'translateX(-50%)';
+            setTimeout(() => { switcherBall.style.transition = ''; }, 520);
+            if (dragX < -SWITCH_THRESHOLD) switchView('gallery');
+            else if (dragX > SWITCH_THRESHOLD) switchView('inspiration');
+        }
+        return { onMove, onEnd };
+    }
 
+    if (switcherBall) {
         switcherBall.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
             e.preventDefault();
-            ballStartX = e.clientX;
-            ballDragX = 0;
-            ballDragging = true;
-            switcherBall.classList.add('dragging');
-            switcherTrack.classList.add('visible');
-
-            function onMove(ev) {
-                ballDragX = ev.clientX - ballStartX;
-                // Move ball visually
-                switcherBall.style.transform = `translateX(calc(-50% + ${ballDragX}px))`;
-                // Direction classes
-                switcherBall.classList.toggle('drag-left', ballDragX < -SWITCH_THRESHOLD);
-                switcherBall.classList.toggle('drag-right', ballDragX > SWITCH_THRESHOLD);
-            }
-
-            function onUp() {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-                ballDragging = false;
-
-                // Snap back
-                switcherBall.style.transition = 'transform .3s cubic-bezier(0.2, 0, 0, 1)';
-                switcherBall.style.transform = 'translateX(-50%)';
-                setTimeout(() => { switcherBall.style.transition = ''; }, 310);
-
-                switcherBall.classList.remove('dragging', 'drag-left', 'drag-right');
-                switcherTrack.classList.remove('visible');
-
-                // Trigger switch
-                if (ballDragX < -SWITCH_THRESHOLD) {
-                    switchView('gallery');
-                } else if (ballDragX > SWITCH_THRESHOLD) {
-                    switchView('inspiration');
-                }
-            }
-
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
+            const { onMove, onEnd } = startBallDrag(e.clientX, e.clientY);
+            const mm = (ev) => onMove(ev.clientX, ev.clientY);
+            const mu = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); onEnd(); };
+            document.addEventListener('mousemove', mm);
+            document.addEventListener('mouseup', mu);
+        });
+        switcherBall.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            const t0 = e.touches[0];
+            const { onMove, onEnd } = startBallDrag(t0.clientX, t0.clientY);
+            const tm = (ev) => { ev.preventDefault(); const tc = ev.touches[0]; onMove(tc.clientX, tc.clientY); };
+            const te = () => { document.removeEventListener('touchmove', tm); document.removeEventListener('touchend', te); document.removeEventListener('touchcancel', te); onEnd(); };
+            document.addEventListener('touchmove', tm, { passive: false });
+            document.addEventListener('touchend', te);
+            document.addEventListener('touchcancel', te);
         });
     }
 
