@@ -42,7 +42,14 @@ body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-
 
 /* ---- Main Content ---- */
 .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ---- View Slider (左右切换) ---- */
+.view-slider{flex:1;display:flex;min-height:0;transition:transform .4s cubic-bezier(0.16,1,0.3,1);width:200%;will-change:transform}
+.view-slider.at-gallery{transform:translateX(0)}
+.view-slider.at-inspiration{transform:translateX(-50%)}
+.view-panel{width:50%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .content-scroll-area{flex:1;overflow-y:auto;min-height:0}
+.empty-state-inline{flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);text-align:center;padding:60px 20px}
 
 /* ---- Top Bar ---- */
 .topbar{height:44px;min-height:44px;padding:0 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-color);background:var(--bg-primary)}

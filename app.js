@@ -255,15 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const sorted = getSorted(entries);
         totalCount.textContent = entries.length;
 
-        // Toggle views
-        gallery.style.display = currentView === 'gallery' ? '' : 'none';
-        inspiration.style.display = currentView === 'inspiration' ? '' : 'none';
         // R18 开关只在灵感界面显示
         if (nsfwToggleWrap) nsfwToggleWrap.style.display = currentView === 'inspiration' ? '' : 'none';
 
         if (entries.length === 0) {
-            gallery.style.display = 'none';
-            inspiration.style.display = 'none';
             emptyState.classList.add('visible');
             return;
         }
@@ -663,6 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const switcherBall  = document.getElementById('switcher-ball');
     const switcherIcon  = document.getElementById('switcher-icon');
     const switcherTrack = document.getElementById('switcher-track');
+    const viewSlider    = document.getElementById('view-slider');
     const SWITCH_THRESHOLD = 50; // px drag distance to trigger switch
 
     function switchView(view) {
@@ -670,9 +666,11 @@ document.addEventListener('DOMContentLoaded', () => {
         currentView = view;
         searchInput.value = ''; searchTerm = '';
         switcherIcon.textContent = view === 'gallery' ? '⊞' : '✦';
+        // Slide animation
+        viewSlider.classList.toggle('at-gallery', view === 'gallery');
+        viewSlider.classList.toggle('at-inspiration', view === 'inspiration');
         syncSliderToView();
         render();
-        showToast(view === 'gallery' ? t('nav.gallery') : t('nav.inspiration'));
     }
 
     if (switcherBall) {
@@ -883,6 +881,9 @@ document.addEventListener('DOMContentLoaded', () => {
     syncSliderToView();
 
     applyI18nToDOM();
+    // 初始化 slider 位置
+    if (viewSlider) viewSlider.classList.add('at-gallery');
+
     load().then(() => {
         render();
 
