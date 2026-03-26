@@ -726,6 +726,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // =====================================================================
     //  Search
     // =====================================================================
+    let ballIsSearchMode = false;
+    let ballDragDist = 0;
+
+    function openSearchMode() {
+        if (ballIsSearchMode) return;
+        ballIsSearchMode = true;
+        switcherBall.classList.add('search-mode');
+        setTimeout(() => {
+            searchInput.focus();
+        }, 100);
+    }
+
+    function closeSearchMode() {
+        if (!ballIsSearchMode) return;
+        ballIsSearchMode = false;
+        switcherBall.classList.remove('search-mode');
+        searchInput.blur();
+        if (searchInput.value) {
+            searchInput.value = '';
+            searchTerm = '';
+            render();
+        }
+    }
+
+    // 点击球（非拖拽）打开搜索
+    if (switcherBall) {
+        switcherBall.addEventListener('mousedown', () => { ballDragDist = 0; });
+        switcherBall.addEventListener('mousemove', () => { ballDragDist++; });
+        switcherBall.addEventListener('click', (e) => {
+            if (ballDragDist > 3) return; // 拖拽过就不触发
+            if (ballIsSearchMode) return;
+            e.stopPropagation();
+            openSearchMode();
+        });
+    }
+
+    // 点外面关闭搜索
+    document.addEventListener('click', (e) => {
+        if (ballIsSearchMode && !switcherBall.contains(e.target)) {
+            closeSearchMode();
+        }
+    });
+
+    // Esc 关闭搜索
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSearchMode();
+    });
+
     searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.trim().toLowerCase(); render(); });
 
     // =====================================================================

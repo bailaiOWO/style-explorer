@@ -53,12 +53,6 @@ body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-
 
 /* ---- Top Bar ---- */
 .topbar{height:44px;min-height:44px;padding:0 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-color);background:var(--bg-primary)}
-.search-container{position:relative;max-width:260px;flex:1}
-.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:15px;pointer-events:none}
-.search-input{width:100%;padding:5px 10px 5px 30px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
-.search-input::placeholder{color:var(--text-tertiary)}
-.search-input:focus{border-color:var(--accent)}
-input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 .topbar-actions{display:flex;align-items:center;gap:16px;margin-left:auto}
 
 /* Topbar info (count + lang) */
@@ -217,6 +211,20 @@ input[type="range"]::-webkit-slider-thumb:hover{background:var(--text-primary)}
 .switcher-ball.drag-right .switcher-ball-inner{background:var(--green);border-color:var(--green)}
 .switcher-ball.drag-right .switcher-icon{color:#fff}
 .switcher-ball.drag-right .switcher-hint--right{opacity:1;transform:translateY(-50%) translateX(0)}
+
+/* ---- Search mode: ball expands to search bar ---- */
+.switcher-search{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.switcher-search-input{width:100%;height:100%;background:transparent;border:none;color:var(--text-primary);font-size:14px;font-family:inherit;outline:none;padding:0 16px;caret-color:var(--accent)}
+.switcher-search-input::placeholder{color:var(--text-tertiary)}
+input[type="search"].switcher-search-input::-webkit-search-cancel-button{-webkit-appearance:none}
+
+.switcher-ball.search-mode{cursor:text}
+.switcher-ball.search-mode .switcher-ball-inner{width:320px;border-radius:24px;background:var(--bg-secondary);border-color:var(--accent)}
+.switcher-ball.search-mode .switcher-icon{opacity:0;width:0;overflow:hidden}
+.switcher-ball.search-mode .switcher-search{opacity:1;pointer-events:auto}
+.switcher-ball.search-mode .switcher-hint{display:none}
+.switcher-ball-inner{transition:width .35s cubic-bezier(0.34,1.56,0.64,1),border-radius .35s ease,background .2s,border-color .2s,box-shadow .2s,transform .2s}
+.switcher-icon{transition:opacity .2s,color .2s,width .2s}
 
 /* Track line that appears during drag */
 .switcher-track{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);width:200px;height:2px;background:var(--bg-tertiary);border-radius:1px;z-index:5999;opacity:0;transition:opacity .2s;pointer-events:none}
