@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSort    = 'clicks';
     let searchTerm     = '';
     let gridColumns    = 5;
+    let dataLoaded     = false;  // 数据是否已从云端加载完成
 
     // =====================================================================
     //  DOM
@@ -170,6 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Unified save/load ---
     async function save() {
+        if (CONFIG.USE_CLOUD && !dataLoaded) {
+            console.warn('Save blocked: data not yet loaded from cloud');
+            return;
+        }
         if (CONFIG.USE_CLOUD) {
             try {
                 await saveCloud('gallery');
@@ -190,9 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 inspoEntries = await loadCloud('inspiration');
                 if (!Array.isArray(galleryEntries)) galleryEntries = [];
                 if (!Array.isArray(inspoEntries)) inspoEntries = [];
+                dataLoaded = true;
             } catch (e) {
                 console.error('Cloud load failed:', e);
-                galleryEntries = []; inspoEntries = [];
+                // 不清空！保留空数组但不标记为已加载，防止 save 覆盖云端数据
+                showToast('Failed to load data from cloud');
             }
         } else {
             try {
@@ -200,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const i = localStorage.getItem(INSPO_KEY);
                 if (g) galleryEntries = JSON.parse(g);
                 if (i) inspoEntries = JSON.parse(i);
+                dataLoaded = true;
             } catch (e) { galleryEntries = []; inspoEntries = []; }
         }
     }
